@@ -1,0 +1,7 @@
+{
+  "extends": "@orgst/config/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "include": ["src/**/*"]
+}

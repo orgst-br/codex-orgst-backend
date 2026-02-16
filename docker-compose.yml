@@ -6,9 +6,23 @@ services:
       POSTGRES_USER: orgst
       POSTGRES_PASSWORD: orgst
     ports:
-      - "5432:5432"    
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data/
 
+  dev:
+    build: .
+    volumes:
+      - ./frontend:/app
+      - node_modules:/app/node_modules
+    ports:
+      - "9000:9000"
+    stdin_open: true
+    tty: true
+    environment:
+      - NODE_ENV=development
+    command: /bin/bash
+
 volumes:
   pgdata:
+  node_modules:

@@ -1,0 +1,32 @@
+name: "Release - Staging Deploy"
+
+on:
+  push:
+    branches:
+      - 'release/v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@10.28.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm exec turbo run build
+
+      # TODO: Adicionar step de deploy conforme infra
+      - name: Deploy (placeholder)
+        run: echo "Deploy to staging - configure based on your infrastructure"

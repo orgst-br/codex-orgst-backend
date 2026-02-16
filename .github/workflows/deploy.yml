@@ -1,0 +1,40 @@
+name: "Manual Deploy"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - sdx
+          - stg
+          - homolog
+          - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@10.28.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm exec turbo run build
+
+      # TODO: Adicionar step de deploy conforme infra
+      - name: Deploy to ${{ github.event.inputs.environment }}
+        run: echo "Deploying to ${{ github.event.inputs.environment }}"

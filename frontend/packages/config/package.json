@@ -1,0 +1,13 @@
+{
+  "name": "@orgst/config",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.test.json": "./tsconfig.test.json",
+    "./jest": "./jest.js",
+    "./babel-react-ts": "./babel.react-ts.cjs",
+    "./prettier": "./prettier.js"
+  }
+}
