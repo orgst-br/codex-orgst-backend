@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.projects.apps.ProjectsConfig",
     "apps.boards.apps.BoardsConfig",
     "apps.tasks.apps.TasksConfig",
+    "apps.kanban.apps.KanbanConfig",
 ]
 
 MIDDLEWARE = [
