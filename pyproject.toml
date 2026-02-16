@@ -14,10 +14,34 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=26.1.0",
-    "pylint>=4.0.4",
-    "pylint-django>=2.7.0",
+    "pre-commit>=4.5.1",
     "pytest>=9.0.2",
     "pytest-django>=4.11.1",
     "ruff>=0.15.1",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = [
+  "*/migrations/*",
+  "*/static/*",
+  "*/media/*",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = [
+  "E501",  # (opcional) se você preferir não brigar com linhas longas; se quiser, remova
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Django: imports "expostos" em __init__.py costumam disparar F401
+"**/__init__.py" = ["F401"]
+
+# Django Ninja/FastAPI-style: File(...) em default arg (B008) é idiomático
+"src/apps/community/views.py" = ["B008"]
+
+# Settings às vezes têm strings longas/constantes
+"src/orgst/settings.py" = ["E501"]
+"src/orgst/settings/base.py" = ["E501"]

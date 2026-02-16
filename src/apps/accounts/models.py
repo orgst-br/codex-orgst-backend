@@ -11,11 +11,13 @@ from django.utils.crypto import salted_hmac
 
 from orgst.common.models import TimeStampedModel
 
+
 class User(AbstractUser):
     """
     Custom User simples (mantém username) mas com email único.
     Se no futuro quiser login por email, dá pra evoluir com calma.
     """
+
     email = models.EmailField(unique=True)
 
     def __str__(self) -> str:
@@ -42,7 +44,7 @@ class Profile(TimeStampedModel):
     linkedin_url = models.URLField(max_length=250, null=True, blank=True)
 
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
-    
+
     def __str__(self) -> str:
         return str(self.display_name)
 
@@ -53,7 +55,7 @@ class Role(TimeStampedModel):
     evitando depender de Django Groups por enquanto.
     """
 
-    key = models.SlugField(max_length=50, unique=True) # exemplo
+    key = models.SlugField(max_length=50, unique=True)  # exemplo
     label = models.CharField(max_length=80)
 
     def __str__(self) -> str:
@@ -66,8 +68,10 @@ class UserRole(TimeStampedModel):
     evitando depender de Django Groups por enquanto.
     """
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_roles") # noqa
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="role_users") # noqa
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_roles"
+    )  # noqa
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="role_users")  # noqa
 
     class Meta:
         unique_together = [("user", "role")]
@@ -86,7 +90,11 @@ class InvitationStatus(models.TextChoices):
 class Invitation(TimeStampedModel):
     email = models.EmailField()
     token_hash = models.CharField(max_length=64, unique=True)
-    status = models.CharField(max_length=20, choices=InvitationStatus.choices, default=InvitationStatus.PENDING) # noqa
+    status = models.CharField(
+        max_length=20,
+        choices=InvitationStatus.choices,
+        default=InvitationStatus.PENDING,
+    )  # noqa
 
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -99,12 +107,14 @@ class Invitation(TimeStampedModel):
         null=True,
         blank=True,
         related_name="accepted_invitations",
-    )   
+    )
 
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
 
-    roles = models.ManyToManyField(Role, through="InvitationRole", related_name="invitations")
+    roles = models.ManyToManyField(
+        Role, through="InvitationRole", related_name="invitations"
+    )
 
     class Meta:
         indexes = [
@@ -114,15 +124,15 @@ class Invitation(TimeStampedModel):
 
     def is_expired(self) -> bool:
         return timezone.now() >= self.expires_at
-    
+
     @staticmethod
     def hash_token(token: str) -> str:
         return salted_hmac("orgst.invitation", token).hexdigest()
-    
+
     @classmethod
     def build_token(cls) -> str:
         return secrets.token_urlsafe(32)
-    
+
     @classmethod
     def default_expires_at(cls, days: int = 7):
         return timezone.now() + timedelta(days=days)

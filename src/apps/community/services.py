@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Prefetch, Q
 
-from apps.accounts.models import Profile, UserRole
+from apps.accounts.models import UserRole
+
 from .models import Skill, UserSkill
 
 User = get_user_model()
 
 
-def list_members(*, q: Optional[str], role: Optional[str], skills: Optional[List[str]]):
+def list_members(*, q: str | None, role: str | None, skills: list[str] | None):
     qs = User.objects.select_related("profile").prefetch_related(
         Prefetch("user_roles", queryset=UserRole.objects.select_related("role")),
         Prefetch("skills", queryset=UserSkill.objects.select_related("skill")),

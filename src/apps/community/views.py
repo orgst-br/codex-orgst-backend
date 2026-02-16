@@ -1,11 +1,10 @@
-from typing import List, Optional
-
 from django.contrib.auth import get_user_model
-from ninja import Router, File
+from ninja import File, Router
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
 from apps.accounts.models import Profile
+
 from .models import Skill
 from .schemas import (
     MemberCardOut,
@@ -26,8 +25,8 @@ def _avatar_url(request, profile):
     return None
 
 
-@router.get("/skills", response=List[SkillOut])
-def list_skills(request, category: Optional[str] = None, q: Optional[str] = None):
+@router.get("/skills", response=list[SkillOut])
+def list_skills(request, category: str | None = None, q: str | None = None):
     qs = Skill.objects.all().order_by("name")
     if category:
         qs = qs.filter(category=category)
@@ -36,12 +35,12 @@ def list_skills(request, category: Optional[str] = None, q: Optional[str] = None
     return qs
 
 
-@router.get("/members", response=List[MemberCardOut])
+@router.get("/members", response=list[MemberCardOut])
 def members(
     request,
-    q: Optional[str] = None,
-    role: Optional[str] = None,
-    skills: Optional[str] = None,
+    q: str | None = None,
+    role: str | None = None,
+    skills: str | None = None,
 ):
     skill_list = [s.strip() for s in skills.split(",") if s.strip()] if skills else None
     users = list_members(q=q, role=role, skills=skill_list)
@@ -138,7 +137,7 @@ def patch_profile(request, user_id: int, payload: ProfilePatchIn):
 
 
 @router.put("/members/{user_id}/skills")
-def put_member_skills(request, user_id: int, payload: List[UserSkillIn]):
+def put_member_skills(request, user_id: int, payload: list[UserSkillIn]):
     if not request.user.is_authenticated:
         raise HttpError(401, "AUTH_REQUIRED")
     if request.user.id != user_id and not request.user.is_staff:
@@ -153,7 +152,7 @@ def put_member_skills(request, user_id: int, payload: List[UserSkillIn]):
 
 
 @router.post("/members/{user_id}/avatar")
-def upload_avatar(request, user_id: int, file: UploadedFile = File(...)):
+def upload_avatar(request, user_id: int, file: UploadedFile = File(...)):  # noqa: B008
     if not request.user.is_authenticated:
         raise HttpError(401, "AUTH_REQUIRED")
     if request.user.id != user_id and not request.user.is_staff:

@@ -121,5 +121,3 @@ PRs são bem-vindos. Sugestão de fluxo:
 - feature branch
 - commits no padrão Conventional Commits (feat:, fix:, chore:)
 - PR com descrição: objetivo, mudanças, como testar
-
-

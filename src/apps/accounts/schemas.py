@@ -1,12 +1,11 @@
 from datetime import datetime
-from typing import List, Optional
 
 from ninja import Schema
 
 
 class InvitationCreateIn(Schema):
     email: str
-    role_keys: List[str]
+    role_keys: list[str]
     expires_in_days: int = 7
 
 
@@ -20,9 +19,9 @@ class InvitationCreateOut(Schema):
 
 class InvitationValidateOut(Schema):
     valid: bool
-    email: Optional[str] = None
-    role_keys: List[str] = []
-    expires_at: Optional[datetime] = None
+    email: str | None = None
+    role_keys: list[str] = []
+    expires_at: datetime | None = None
 
 
 class InvitationAcceptIn(Schema):

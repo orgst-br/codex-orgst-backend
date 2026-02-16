@@ -19,7 +19,9 @@ class SkillCategory(models.TextChoices):
 
 class Skill(TimeStampedModel):
     name = models.CharField(max_length=80, unique=True)
-    category = models.CharField(max_length=20, choices=SkillCategory.choices, default=SkillCategory.OTHER)
+    category = models.CharField(
+        max_length=20, choices=SkillCategory.choices, default=SkillCategory.OTHER
+    )
 
     class Meta:
         indexes = [models.Index(fields=["category", "name"])]
@@ -29,8 +31,12 @@ class Skill(TimeStampedModel):
 
 
 class UserSkill(TimeStampedModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="skills")
-    skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name="user_skills")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="skills"
+    )
+    skill = models.ForeignKey(
+        Skill, on_delete=models.CASCADE, related_name="user_skills"
+    )
     level = models.PositiveSmallIntegerField(default=1)
     years_exp = models.PositiveSmallIntegerField(default=0)
     can_mentor = models.BooleanField(default=False)

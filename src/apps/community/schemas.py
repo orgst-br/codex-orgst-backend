@@ -1,5 +1,4 @@
-from datetime import datetime, date
-from typing import List, Optional
+from datetime import date, datetime
 
 from ninja import Schema
 
@@ -29,34 +28,33 @@ class MemberCardOut(Schema):
     id: int
     email: str
     display_name: str
-    avatar_url: Optional[str] = None
-    roles: List[str]
-    skills: List[str]  # nomes simples pra card
+    avatar_url: str | None = None
+    roles: list[str]
+    skills: list[str]  # nomes simples pra card
 
 
 class MemberDetailOut(Schema):
     id: int
     email: str
     display_name: str
-    avatar_url: Optional[str] = None
+    avatar_url: str | None = None
 
-    birth_date: Optional[date] = None
-    profession: Optional[str] = None
-    bio: Optional[str] = None
-    location: Optional[str] = None
-    github_url: Optional[str] = None
-    linkedin_url: Optional[str] = None
+    birth_date: date | None = None
+    profession: str | None = None
+    bio: str | None = None
+    location: str | None = None
+    github_url: str | None = None
+    linkedin_url: str | None = None
 
-
-    roles: List[str]
-    skills: List[UserSkillOut]
+    roles: list[str]
+    skills: list[UserSkillOut]
 
 
 class ProfilePatchIn(Schema):
-    display_name: Optional[str] = None
-    birth_date: Optional[date] = None
-    profession: Optional[str] = None
-    bio: Optional[str] = None
-    location: Optional[str] = None
-    github_url: Optional[str] = None
-    linkedin_url: Optional[str] = None
+    display_name: str | None = None
+    birth_date: date | None = None
+    profession: str | None = None
+    bio: str | None = None
+    location: str | None = None
+    github_url: str | None = None
+    linkedin_url: str | None = None

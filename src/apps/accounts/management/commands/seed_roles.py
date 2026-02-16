@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from apps.accounts.models import Role
 
+from apps.accounts.models import Role
 
 DEFAULT_ROLES = [
     ("cofounder", "Co-founder"),

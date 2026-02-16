@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from apps.community.models import Skill, SkillCategory
 
+from apps.community.models import Skill, SkillCategory
 
 DEFAULT_SKILLS = [
     ("Python", SkillCategory.BACKEND),
