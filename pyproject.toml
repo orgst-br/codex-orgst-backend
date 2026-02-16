@@ -5,6 +5,7 @@ description = "django-ninja project linters template"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dj-database-url>=3.1.1",
     "django>=6.0.2",
     "django-environ>=0.12.1",
     "django-ninja>=1.5.3",
