@@ -4,6 +4,15 @@ from ninja import Schema
 from pydantic import Field
 
 
+class MeOut(Schema):
+    id: str
+    username: str
+    email: str | None = None
+    display_name: str | None = None
+    roles: list[str] = Field(default_factory=list)
+    is_staff: bool = False
+
+
 class InvitationCreateIn(Schema):
     email: str
     role_keys: list[str]
