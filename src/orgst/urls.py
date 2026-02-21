@@ -18,12 +18,20 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.urls import path
 
 from orgst.api.v1.router import api
 
+
+def redirect_view(request):
+    return redirect(settings.FRONTEND_HOME_URL, permanent=False)
+
+
 urlpatterns = [
+    path("", redirect_view),
     path("admin/", admin.site.urls),
+    path("home/", redirect_view),
     path("api/v1/", api.urls),
 ]
 
