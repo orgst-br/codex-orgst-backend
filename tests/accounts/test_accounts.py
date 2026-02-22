@@ -9,7 +9,6 @@ from django.contrib.admin.sites import AdminSite
 from apps.accounts.admin import ProfileAdmin
 from apps.accounts.models import InvitationStatus, Profile
 from apps.accounts.services import (
-    accept_invitation,
     create_invitation,
     validate_invitation_token,
 )
@@ -32,9 +31,10 @@ class AccountsUnitTests(TestCase):
         pass
 
     def test_create_invitation_links_email_and_roles(self):
-        with patch("apps.accounts.services.Invitation") as invitation_cls, patch(
-            "apps.accounts.services.Role"
-        ) as role_cls:
+        with (
+            patch("apps.accounts.services.Invitation") as invitation_cls,
+            patch("apps.accounts.services.Role") as role_cls,
+        ):
             fake_inv = Mock()
             fake_inv.roles = Mock()
 
@@ -42,7 +42,10 @@ class AccountsUnitTests(TestCase):
             invitation_cls.hash_token.return_value = "hashed-token"
             invitation_cls.default_expires_at.return_value = "expires-at"
             invitation_cls._default_manager.create.return_value = fake_inv
-            role_cls._default_manager.filter.return_value = ["mentor_role", "mentorado_role"]
+            role_cls._default_manager.filter.return_value = [
+                "mentor_role",
+                "mentorado_role",
+            ]
 
             created = create_invitation.__wrapped__(
                 invited_by=self.inviter,
@@ -54,7 +57,6 @@ class AccountsUnitTests(TestCase):
             self.assertEqual(created.token, "plain-token")
             invitation_cls._default_manager.create.assert_called_once()
             fake_inv.roles.add.assert_called_once_with("mentor_role", "mentorado_role")
-
 
     def test_validate_invitation_expired_returns_none_and_marks_expired(self):
         with patch("apps.accounts.services.Invitation") as invitation_cls:
@@ -71,30 +73,6 @@ class AccountsUnitTests(TestCase):
             self.assertIsNone(result)
             self.assertEqual(fake_inv.status, InvitationStatus.EXPIRED)
             fake_inv.save.assert_called_once()
-
-    def test_create_invitation_links_email_and_roles(self):
-        with patch("apps.accounts.services.Invitation") as invitation_cls, patch(
-            "apps.accounts.services.Role"
-        ) as role_cls:
-            fake_inv = Mock()
-            fake_inv.roles = Mock()
-
-            invitation_cls.build_token.return_value = "plain-token"
-            invitation_cls.hash_token.return_value = "hashed-token"
-            invitation_cls.default_expires_at.return_value = "expires-at"
-            invitation_cls._default_manager.create.return_value = fake_inv
-            role_cls._default_manager.filter.return_value = ["mentor_role", "mentorado_role"]
-
-            created = create_invitation.__wrapped__(
-                invited_by=self.inviter,
-                email="NOVO@ORGST.DEV ",
-                role_keys=["mentor", "mentorado"],
-                expires_in_days=7,
-            )
-
-            self.assertEqual(created.token, "plain-token")
-            invitation_cls._default_manager.create.assert_called_once()
-            fake_inv.roles.add.assert_called_once_with("mentor_role", "mentorado_role")
 
     def test_can_create_invitation_permissions(self):
         user_super = SimpleNamespace(
