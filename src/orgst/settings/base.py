@@ -1,6 +1,10 @@
 from pathlib import Path
 
+import dj_database_url
 import environ
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -37,12 +41,20 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "orgst.common.middleware.DevCORSMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "orgst.common.middleware.ForcePasswordChangeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.backends.EmailOrUsernameBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 
 ROOT_URLCONF = "orgst.urls"
 
@@ -64,16 +76,24 @@ TEMPLATES = [
 WSGI_APPLICATION = "orgst.wsgi.application"
 ASGI_APPLICATION = "orgst.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "orgst",
-        "USER": "orgst",
-        "PASSWORD": "orgst",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
-}
+default_sqlite_url = f"sqlite:///{BASE_DIR.parent / 'db.sqlite3'}"
+DATABASE_URL = env("DATABASE_URL", default=default_sqlite_url)
+
+db_config = dj_database_url.parse(
+    DATABASE_URL,
+    conn_max_age=600,
+    ssl_require=False,
+)
+
+if db_config.get("ENGINE") == "django.db.backends.postgresql":
+    db_config.setdefault("OPTIONS", {})
+
+    # Só força SSL se explicitamente configurado
+    if env.bool("DB_SSL_REQUIRE", default=False):
+        db_config["OPTIONS"]["sslmode"] = "require"
+
+DATABASES = {"default": db_config}
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -91,9 +111,19 @@ TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR.parent / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=["http://localhost:3000", "http://127.0.0.1:3000"],
+)
+FRONTEND_HOME_URL = env(
+    "FRONTEND_HOME_URL",
+    default="http://localhost:3000/",
+)
 
 AUTH_USER_MODEL = "accounts.User"
 MEDIA_URL = "/media/"

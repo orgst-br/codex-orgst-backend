@@ -47,3 +47,11 @@ ignore = [
 # Settings às vezes têm strings longas/constantes
 "src/orgst/settings.py" = ["E501"]
 "src/orgst/settings/base.py" = ["E501"]
+
+[tool.pylint.main]
+load-plugins = ["pylint_django"]
+source-roots = ["src"]
+py-version = "3.12"
+
+[tool.pylint."django foreign keys referenced by strings"]
+django-settings-module = "orgst.settings.local"

@@ -12,6 +12,11 @@ from django.utils.crypto import salted_hmac
 from orgst.common.models import TimeStampedModel
 
 
+def generate_invitation_token_hash() -> str:
+    token = secrets.token_urlsafe(32)
+    return salted_hmac("orgst.invitation", token).hexdigest()
+
+
 class User(AbstractUser):
     """
     Custom User simples (mantém username) mas com email único.
@@ -19,6 +24,7 @@ class User(AbstractUser):
     """
 
     email = models.EmailField(unique=True)
+    must_change_password = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.email or self.username
@@ -117,6 +123,18 @@ class Invitation(TimeStampedModel):
         Role, through="InvitationRole", related_name="invitations"
     )
 
+    token_hash = models.CharField(
+        max_length=64,
+        unique=True,
+        default=generate_invitation_token_hash,
+        editable=False,
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.token_hash:
+            self.token_hash = generate_invitation_token_hash()
+        super().save(*args, **kwargs)
+
     class Meta:
         indexes = [
             models.Index(fields=["email", "status"]),
@@ -138,6 +156,9 @@ class Invitation(TimeStampedModel):
     def default_expires_at(cls, days: int = 7):
         return timezone.now() + timedelta(days=days)
 
+    def __str__(self) -> str:
+        return f"Invitation - {self.email} ({self.status})"
+
 
 class InvitationRole(models.Model):
     invitation = models.ForeignKey(Invitation, on_delete=models.CASCADE)
@@ -145,3 +166,6 @@ class InvitationRole(models.Model):
 
     class Meta:
         unique_together = [("invitation", "role")]
+
+    def __str__(self) -> str:
+        return f"{self.invitation.email} -> {self.role.key} "
