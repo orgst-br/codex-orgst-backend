@@ -15,6 +15,64 @@ router = Router(tags=["accounts"])
 User = get_user_model()
 
 
+<<<<<<< HEAD
+=======
+def _can_create_invitation(user) -> bool:
+    if not getattr(user, "is_authenticated", False):
+        return False
+    if getattr(user, "is_superuser", False):
+        return True
+    return user.user_roles.filter(role__key__in=["admin", "cofounder"]).exists()
+
+
+@router.get("/me", response=MeOut)
+def api_me(request: HttpRequest):
+    user = request.user
+
+    # Com auth global, isso quase nunca roda sem user válido,
+    # mas fica defensivo caso alguém use esse router sem auth no futuro
+    if not getattr(user, "is_authenticated", False):
+        raise HttpError(401, "UNAUTHORIZED")
+
+    # Profile pode não existir dependendo do fluxo (ex.: usuário criado via admin)
+    display_name = None
+    profile = getattr(user, "profile", None)
+    if profile:
+        display_name = getattr(profile, "display_name", None)
+
+    roles = list(
+        user.user_roles.select_related("role").values_list("role__key", flat=True)
+    )
+
+    return {
+        "id": str(user.id),
+        "username": user.username,
+        "email": user.email,
+        "display_name": display_name,
+        "roles": roles,
+        "is_staff": bool(user.is_staff),
+    }
+
+
+@router.post("/auth/token", auth=None, response=TokenOut)
+def api_token(request: HttpRequest, payload: TokenIn):
+    identifier = payload.identifier.strip()
+
+    user = (
+        User.objects.filter(
+            Q(email__iexact=identifier) | Q(username__iexact=identifier)
+        )
+        .only("id", "is_active", "password", "email", "username")
+        .first()
+    )
+
+    if not user or not user.is_active or not user.check_password(payload.password):
+        raise HttpError(401, "INVALID_CREDENTIALS")
+
+    return {"access": create_access_token(user)}
+
+
+>>>>>>> 54da190 (Limitação de acesso de convidados ao próprio perfil no django-admin)
 @router.post("/invitations", response=InvitationCreateOut)
 def api_create_invitation(request: HttpRequest, payload: InvitationCreateIn):
     # MVP: usa usuário autenticado via Django Admin session.

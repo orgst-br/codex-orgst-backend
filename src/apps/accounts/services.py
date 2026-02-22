@@ -68,9 +68,16 @@ def accept_invitation(*, token: str, password: str, display_name: str) -> User:
     if not inv:
         raise ValueError("INVALID_OR_EXPIRED_INVITATION")
 
+    invite_role_keys = set(inv.roles.values_list("key", flat=True))
+    profile_only_staff_roles = {"mentor", "mentorado"}
+    is_profile_staff = bool(invite_role_keys & profile_only_staff_roles)
+
     user = User.objects.create(
         username=_make_username(inv.email),
         email=inv.email,
+        is_staff=is_profile_staff,
+        is_superuser=False,
+        is_active=True,
     )
     user.set_password(password)
     user.save(update_fields=["password"])
