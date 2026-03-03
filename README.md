@@ -23,7 +23,7 @@ O Orgst nasce para ser a “casa” da comunidade:
 - **Python 3.12**
 - **Django**
 - **Django Ninja** (API + OpenAPI/Swagger)
-- **PostgreSQL** (via Docker) ou **SQLite** (fallback local)
+- **SQLite** (padrão local via Django)
 
 ### Frontend (planejado)
 - Next.js + Tailwind + shadcn/ui
@@ -43,7 +43,6 @@ O Orgst nasce para ser a “casa” da comunidade:
 ## Pré-requisitos
 
 - Python **3.12**
-- Docker + Docker Compose (recomendado para Postgres)
 - (Opcional) `uv` instalado
 
 ---
@@ -71,19 +70,15 @@ DEBUG=true
 SECRET_KEY=dev-secret-key-change-me
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Postgres (dev via Docker)
-DATABASE_URL=postgres://orgst:orgst@localhost:5432/orgst
+# Opcional: para usar outro banco (ex.: Postgres), defina DATABASE_URL
+# DATABASE_URL=postgres://usuario:senha@localhost:5432/orgst
 ```
 ---
 
 ### Banco de dados
 
-Postgres via Docker
-
-Subir o banco:
-```bash
-docker compose up -d db
-```
+Por padrão, o projeto usa **SQLite** (`db.sqlite3`) via configuração do Django.
+Não é necessário subir PostgreSQL com Docker para desenvolvimento local.
 
 Rodar migrations:
 ```

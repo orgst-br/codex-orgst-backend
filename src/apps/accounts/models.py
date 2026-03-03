@@ -39,15 +39,14 @@ class Profile(TimeStampedModel):
 
     display_name = models.CharField(max_length=160)
 
-    # comunidade (fase 2)
 
     birth_date = models.DateField(null=True, blank=True)
     profession = models.CharField(max_length=120, null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
     location = models.CharField(max_length=120, null=True, blank=True)
 
-    github_url = models.URLField(max_length=250, null=True, blank=True)
-    linkedin_url = models.URLField(max_length=250, null=True, blank=True)
+    github_url = models.URLField(max_length=250, null=False, blank=False)
+    linkedin_url = models.URLField(max_length=250, null=False, blank=False)
     instagram_url = models.URLField(max_length=250, null=True, blank=True)
 
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
