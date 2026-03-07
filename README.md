@@ -61,11 +61,19 @@ cd orgst
 
 ### 2) Criar ambiente virtual e instalar dependências (uv)
 
+No Linux/Mac:
 ```bash
 uv venv
 source .venv/bin/activate
 uv sync
 ```
+No Windows:
+```bash
+uv venv
+.venv\Scripts\activate
+uv sync
+```
+
 
 ### 3) Configurar variáveis de ambiente
 
