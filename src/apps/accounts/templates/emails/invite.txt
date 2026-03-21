@@ -1,0 +1,26 @@
+ORGST DEV_PLATFORM v1.0.0
+──────────────────────────
+
+[ INCOMING TRANSMISSION ]
+
+Olá, {{ name }}.
+
+Seu PID foi reservado na rede Orgst.
+Alguém da comunidade validou que você pertence a este grafo.
+
+Para ativar seu processo e iniciar sua sessão:
+
+> ssh --connect {{ invite_link }}
+
+Esse token expira em {{ expires_at }}.
+Após a expiração, o convite será revogado e um novo
+precisará ser emitido por um membro ativo.
+
+Ao acessar, o terminal vai inicializar.
+Digite o que aparecer na tela. O sistema vai guiar você.
+
+Nenhum processo será criado sem sua autenticação.
+
+──────────────────────────
+Orgst · weorgst.com
+Uma comunidade voluntária de tecnologia.

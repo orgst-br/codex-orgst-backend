@@ -4,11 +4,13 @@ import secrets
 import string
 from collections.abc import Iterable
 from dataclasses import dataclass
+from functools import partial
 
 from django.db import transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
+from .emails import send_invitation_email
 from .models import Invitation, InvitationStatus, Profile, Role, User
 
 ALLOWED_ADMIN_ONLY_ROLES = {"mentor", "mentorado"}
@@ -37,21 +39,29 @@ def _generate_temp_password(length: int = 12) -> str:
 
 @transaction.atomic
 def create_invitation(
-    *, invited_by: User, email: str, role_keys: Iterable[str], expires_in_days: int = 7
+    *,
+    invited_by: User,
+    email: str,
+    invitee_name: str,
+    role_keys: Iterable[str],
 ) -> CreatedInvitation:
     token = Invitation.build_token()
     token_hash = Invitation.hash_token(token)
 
     inv = Invitation._default_manager.create(
         email=email.lower().strip(),
+        invitee_name=invitee_name.strip(),
         token_hash=token_hash,
         invited_by=invited_by,
         status=InvitationStatus.PENDING,
-        expires_at=Invitation.default_expires_at(expires_in_days),
+        expires_at=Invitation.default_expires_at(),
     )
 
     roles = list(Role._default_manager.filter(key__in=list(role_keys)))
     inv.roles.add(*roles)
+    transaction.on_commit(
+        partial(send_invitation_email, invitation=inv, raw_token=token)
+    )
 
     return CreatedInvitation(invitation=inv, token=token)
 
@@ -61,7 +71,7 @@ def validate_invitation_token(*, token: str) -> Invitation | None:
     inv = Invitation._default_manager.filter(token_hash=token_hash).first()
     if not inv:
         return None
-    if inv.status != InvitationStatus.PENDING:
+    if inv.status != InvitationStatus.PENDING or inv.used_at is not None:
         return None
     if inv.is_expired():
         inv.status = InvitationStatus.EXPIRED
@@ -71,7 +81,15 @@ def validate_invitation_token(*, token: str) -> Invitation | None:
 
 
 @transaction.atomic
-def accept_invitation(*, token: str, password: str, display_name: str) -> User:
+def register_from_invitation(
+    *,
+    token: str,
+    password: str,
+    display_name: str,
+    bio: str | None = None,
+    github_url: str,
+    linkedin_url: str,
+) -> User:
     inv = validate_invitation_token(token=token)
     if not inv:
         raise ValueError("INVALID_OR_EXPIRED_INVITATION")
@@ -90,17 +108,52 @@ def accept_invitation(*, token: str, password: str, display_name: str) -> User:
     user.set_password(password)
     user.save(update_fields=["password"])
 
-    Profile.objects.create(user=user, display_name=display_name)
+    Profile.objects.create(
+        user=user,
+        display_name=display_name,
+        bio=bio,
+        github_url=github_url,
+        linkedin_url=linkedin_url,
+    )
 
     for role in inv.roles.all():
         user.user_roles.create(role=role)
 
+    accepted_at = timezone.now()
     inv.status = InvitationStatus.ACCEPTED
     inv.accepted_by = user
-    inv.accepted_at = timezone.now()
-    inv.save(update_fields=["status", "accepted_by", "accepted_at", "updated_at"])
+    inv.accepted_at = accepted_at
+    inv.used_at = accepted_at
+    inv.save(
+        update_fields=[
+            "status",
+            "accepted_by",
+            "accepted_at",
+            "used_at",
+            "updated_at",
+        ]
+    )
 
     return user
+
+
+def accept_invitation(
+    *,
+    token: str,
+    password: str,
+    display_name: str,
+    bio: str | None = None,
+    github_url: str,
+    linkedin_url: str,
+) -> User:
+    return register_from_invitation(
+        token=token,
+        password=password,
+        display_name=display_name,
+        bio=bio,
+        github_url=github_url,
+        linkedin_url=linkedin_url,
+    )
 
 
 def provision_admin_only_invitation(

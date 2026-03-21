@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ORGST DEV_PLATFORM v1.0.0</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 32px 16px;
+      background: #1b2b34;
+      color: #c0c5ce;
+      font-family: 'Courier New', Courier, monospace;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      style="max-width: 720px; margin: 0 auto; border: 1px solid #4f5b66; background: #263945;"
+    >
+      <tr>
+        <td style="padding: 28px; white-space: pre-line; line-height: 1.7; font-size: 15px;">
+ORGST DEV_PLATFORM v1.0.0
+──────────────────────────
+
+[ INCOMING TRANSMISSION ]
+
+Olá, {{ name }}.
+
+Seu PID foi reservado na rede Orgst.
+Alguém da comunidade validou que você pertence a este grafo.
+
+Para ativar seu processo e iniciar sua sessão:
+
+<a href="{{ invite_link }}" style="color: #8fa1b3; text-decoration: none;">&gt; ssh --connect {{ invite_link }}</a>
+
+Esse token expira em {{ expires_at }}.
+Após a expiração, o convite será revogado e um novo
+precisará ser emitido por um membro ativo.
+
+Ao acessar, o terminal vai inicializar.
+Digite o que aparecer na tela. O sistema vai guiar você.
+
+Nenhum processo será criado sem sua autenticação.
+
+──────────────────────────
+Orgst · weorgst.com
+Uma comunidade voluntária de tecnologia.
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
