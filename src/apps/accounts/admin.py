@@ -1,5 +1,7 @@
 from django.contrib import admin, messages
+from django.db import transaction
 
+from .emails import send_invitation_email
 from .models import Invitation, InvitationRole, Profile, Role, User, UserRole
 from .services import provision_admin_only_invitation
 
@@ -107,10 +109,24 @@ class InvitationRoleInline(admin.TabularInline):
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ("id", "email", "status", "expires_at", "invited_by", "accepted_by")
+    list_display = (
+        "id",
+        "email",
+        "invitee_name",
+        "status",
+        "expires_at",
+        "invited_by",
+        "accepted_by",
+    )
     list_filter = ("status",)
-    search_fields = ("email",)
-    readonly_fields = ("token_hash", "accepted_at", "created_at", "updated_at")
+    search_fields = ("email", "invitee_name")
+    readonly_fields = (
+        "token_hash",
+        "accepted_at",
+        "used_at",
+        "created_at",
+        "updated_at",
+    )
     inlines = [InvitationRoleInline]
     actions = ["provision_temp_admin_access"]
 
@@ -130,13 +146,19 @@ class InvitationAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
     def save_model(self, request, obj, form, change):
+        raw_token = None
         if not obj.invited_by_id:
             obj.invited_by = request.user
         if not obj.expires_at:
-            obj.expires_at = Invitation.default_expires_at(days=7)
+            obj.expires_at = Invitation.default_expires_at()
         if not obj.token_hash:
-            obj.token_hash = Invitation.hash_token(Invitation.build_token())
+            raw_token = Invitation.build_token()
+            obj.token_hash = Invitation.hash_token(raw_token)
         super().save_model(request, obj, form, change)
+        if raw_token:
+            transaction.on_commit(
+                lambda: send_invitation_email(invitation=obj, raw_token=raw_token)
+            )
 
     @admin.action(description="Provisionar acesso temporário (senha provisória)")
     def provision_temp_admin_access(self, request, queryset):

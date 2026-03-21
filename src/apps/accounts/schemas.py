@@ -15,22 +15,23 @@ class MeOut(Schema):
 
 class InvitationCreateIn(Schema):
     email: str
+    name: str
     role_keys: list[str]
-    expires_in_days: int = 7
 
 
 class InvitationCreateOut(Schema):
     id: str
     email: str
+    name: str
     status: str
     expires_at: datetime
-    invite_token: str  # token puro (retornar só aqui)
+    invite_token: str | None = None  # token puro só em debug
 
 
 class InvitationValidateOut(Schema):
     valid: bool
     email: str | None = None
-    role_keys: list[str] = Field(default_factory=list)
+    name: str | None = None
     expires_at: datetime | None = None
 
 
@@ -45,11 +46,17 @@ class TokenOut(Schema):
 
 
 class InvitationAcceptIn(Schema):
-    token: str
+    invite_token: str
     password: str
     display_name: str
+    bio: str | None = None
+    github_url: str
+    linkedin_url: str
 
 
 class InvitationAcceptOut(Schema):
     user_id: str
     email: str
+    access: str
+    pid: int
+    roles: list[str] = Field(default_factory=list)

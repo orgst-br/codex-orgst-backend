@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import secrets
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -13,6 +14,7 @@ from orgst.common.models import TimeStampedModel
 
 
 def generate_invitation_token_hash() -> str:
+    # Mantido por compatibilidade com migrations antigas.
     token = secrets.token_urlsafe(32)
     return salted_hmac("orgst.invitation", token).hexdigest()
 
@@ -38,7 +40,6 @@ class Profile(TimeStampedModel):
     )
 
     display_name = models.CharField(max_length=160)
-
 
     birth_date = models.DateField(null=True, blank=True)
     profession = models.CharField(max_length=120, null=True, blank=True)
@@ -95,6 +96,7 @@ class InvitationStatus(models.TextChoices):
 
 class Invitation(TimeStampedModel):
     email = models.EmailField()
+    invitee_name = models.CharField(max_length=160)
     token_hash = models.CharField(max_length=64, unique=True)
     status = models.CharField(
         max_length=20,
@@ -117,22 +119,11 @@ class Invitation(TimeStampedModel):
 
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
 
     roles = models.ManyToManyField(
         Role, through="InvitationRole", related_name="invitations"
     )
-
-    token_hash = models.CharField(
-        max_length=64,
-        unique=True,
-        default=generate_invitation_token_hash,
-        editable=False,
-    )
-
-    def save(self, *args, **kwargs):
-        if not self.token_hash:
-            self.token_hash = generate_invitation_token_hash()
-        super().save(*args, **kwargs)
 
     class Meta:
         indexes = [
@@ -149,11 +140,11 @@ class Invitation(TimeStampedModel):
 
     @classmethod
     def build_token(cls) -> str:
-        return secrets.token_urlsafe(32)
+        return uuid.uuid4().hex
 
     @classmethod
-    def default_expires_at(cls, days: int = 7):
-        return timezone.now() + timedelta(days=days)
+    def default_expires_at(cls, hours: int = 72):
+        return timezone.now() + timedelta(hours=hours)
 
     def __str__(self) -> str:
         return f"Invitation - {self.email} ({self.status})"

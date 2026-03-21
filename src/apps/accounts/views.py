@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.http import HttpRequest
@@ -84,17 +85,18 @@ def api_create_invitation(request: HttpRequest, payload: InvitationCreateIn):
     created = create_invitation(
         invited_by=request.user,
         email=payload.email,
+        invitee_name=payload.name,
         role_keys=payload.role_keys,
-        expires_in_days=payload.expires_in_days,
     )
 
     inv = created.invitation
     return {
         "id": str(inv.id),
         "email": inv.email,
+        "name": inv.invitee_name,
         "status": inv.status,
         "expires_at": inv.expires_at,
-        "invite_token": created.token,
+        "invite_token": created.token if settings.DEBUG else None,
     }
 
 
@@ -107,8 +109,35 @@ def api_validate_invitation(request: HttpRequest, token: str):
     return {
         "valid": True,
         "email": inv.email,
-        "role_keys": [r.key for r in inv.roles.all()],
+        "name": inv.invitee_name,
         "expires_at": inv.expires_at,
+    }
+
+
+@router.post("/register", auth=None, response=InvitationAcceptOut)
+def api_register_from_invitation(request: HttpRequest, payload: InvitationAcceptIn):
+    try:
+        user = accept_invitation(
+            token=payload.invite_token,
+            password=payload.password,
+            display_name=payload.display_name,
+            bio=payload.bio,
+            github_url=payload.github_url,
+            linkedin_url=payload.linkedin_url,
+        )
+    except ValueError:
+        raise HttpError(400, "INVALID_OR_EXPIRED_INVITATION") from None
+
+    roles = list(
+        user.user_roles.select_related("role").values_list("role__key", flat=True)
+    )
+
+    return {
+        "user_id": str(user.id),
+        "email": user.email,
+        "access": create_access_token(user),
+        "pid": user.id,
+        "roles": roles,
     }
 
 
@@ -116,11 +145,24 @@ def api_validate_invitation(request: HttpRequest, token: str):
 def api_accept_invitation(request: HttpRequest, payload: InvitationAcceptIn):
     try:
         user = accept_invitation(
-            token=payload.token,
+            token=payload.invite_token,
             password=payload.password,
             display_name=payload.display_name,
+            bio=payload.bio,
+            github_url=payload.github_url,
+            linkedin_url=payload.linkedin_url,
         )
     except ValueError:
         raise HttpError(400, "INVALID_OR_EXPIRED_INVITATION") from None
 
-    return {"user_id": str(user.id), "email": user.email}
+    roles = list(
+        user.user_roles.select_related("role").values_list("role__key", flat=True)
+    )
+
+    return {
+        "user_id": str(user.id),
+        "email": user.email,
+        "access": create_access_token(user),
+        "pid": user.id,
+        "roles": roles,
+    }
